@@ -4,6 +4,8 @@ import { fbm2, smooth } from './noise.js';
 import { SUN_AZ } from './env.js';
 
 export const CAM_Z = 18;   // posición de la cámara sobre el campo
+// Carril de tierra que cruza el campo (z central, medio ancho): ahí caminan los gatitos.
+export const LANE = new THREE.Vector3(12.5, 1.15, 1);
 
 // Camino de tierra que serpentea hacia el horizonte (mismo cálculo que en el shader).
 export function pathX(z) {
@@ -42,6 +44,7 @@ ${ENV_UNIFORMS}
 ${NOISE}
 ${FOG}
 ${PATH}
+uniform vec3 uLane;
 uniform vec3 uGrassA;
 uniform vec3 uGrassB;
 uniform vec3 uWheat;
@@ -70,6 +73,9 @@ void main() {
   float dp = abs(p.x - pathX(p.y));
   float pathMask = 1.0 - smoothstep(0.9, 1.7, dp + (fine - 0.4) * 0.9);
   pathMask *= 1.0 - smoothstep(160.0, 320.0, dist);
+  float laneM = 1.0 - smoothstep(uLane.y, uLane.y + 0.8, abs(p.y - uLane.x));
+  laneM *= 1.0 - smoothstep(24.0, 40.0, abs(p.x));
+  pathMask = max(pathMask, laneM);
   vec3 dirt = uDirt * (0.85 + fine * 0.35);
   dirt *= 1.0 - 0.28 * smoothstep(0.14, 0.0, abs(dp - 0.55));
   alb = mix(alb, dirt, pathMask);
@@ -96,6 +102,7 @@ export function createTerrain(env) {
   const mat = new THREE.ShaderMaterial({
     uniforms: {
       ...env.u,
+      uLane: { value: LANE },
       uGrassA: { value: new THREE.Color('#5c7430') },
       uGrassB: { value: new THREE.Color('#9a9a3c') },
       uWheat: { value: new THREE.Color('#c4a448') },

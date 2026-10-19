@@ -2,16 +2,18 @@
   "name": "atardecer-en-el-campo",
   "version": "1.0.0",
   "private": true,
-  "description": "Atardecer 3D en un campo que se convierte en noche con estrellas y luna estilo Minecraft.",
+  "description": "Historia animada: pantalla negra con frases, noche con luna de píxeles, cuatro gatitos y un tornado de fotos.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs"
   },
   "dependencies": {
-    "lottie-web": "^5.12.2",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/pixelify-sans": "^5.3.0",
     "three": "0.160.0"
   },
   "devDependencies": {
-    "esbuild": "0.25.0"
+    "esbuild": "0.25.0",
+    "sharp": "^0.35.5"
   }
 }

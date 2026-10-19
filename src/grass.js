@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { ENV_UNIFORMS, FOG, WIND } from './glsl.js';
 import { mulberry32 } from './noise.js';
-import { heightAt, pathX, CAM_Z } from './terrain.js';
+import { heightAt, pathX, CAM_Z, LANE } from './terrain.js';
 
 const SEGMENTS = 4;
 
@@ -33,6 +33,7 @@ ${FOG}
 ${WIND}
 attribute vec3 aPos;
 attribute vec4 aData;   // x: giro, y: alto, z: ancho, w: azar
+uniform vec3 uLane;
 uniform vec3 uBase;
 uniform vec3 uTipA;
 uniform vec3 uTipB;
@@ -45,6 +46,7 @@ void main() {
   // Las briznas lejanas del borde del prado se encogen para que no se vea el corte.
   float edge = 1.0 - smoothstep(58.0, 82.0, length(aPos.xz - vec2(0.0, ${CAM_Z.toFixed(1)})));
   h *= mix(0.25, 1.0, edge);
+  h *= mix(0.1, 1.0, smoothstep(uLane.y, uLane.y + 1.0, abs(aPos.z - uLane.x)));
 
   vec3 p = vec3(position.x * w, position.y * h, 0.0);
   float c = cos(yaw), s = sin(yaw);
@@ -85,6 +87,7 @@ ${FOG}
 ${WIND}
 attribute vec3 aPos;
 attribute vec4 aData;   // x: alto, y: tamaño, z: azar, w: color
+uniform vec3 uLane;
 uniform vec3 uPalette[4];
 varying vec3 vCol;
 varying vec2 vUv;
@@ -93,11 +96,13 @@ void main() {
   float h = aData.x;
   float edge = 1.0 - smoothstep(58.0, 82.0, length(aPos.xz - vec2(0.0, ${CAM_Z.toFixed(1)})));
   h *= mix(0.25, 1.0, edge);
+  float laneM = smoothstep(uLane.y, uLane.y + 1.0, abs(aPos.z - uLane.x));
+  h *= mix(0.1, 1.0, laneM);
   vec3 top = aPos + vec3(0.0, h, 0.0) + windBend(aPos.xz, 1.0, h, aData.z);
 
   vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
   vec3 up = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-  vec3 world = top + (right * position.x + up * position.y) * aData.y * mix(0.4, 1.0, edge);
+  vec3 world = top + (right * position.x + up * position.y) * aData.y * mix(0.4, 1.0, edge) * laneM;
   gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
   vUv = position.xy * 2.0;
 
@@ -141,6 +146,7 @@ export function createGrass(env, { count, flowers }) {
       const th = (rng() * 2 - 1) * 2.05;
       const x = Math.sin(th) * r, z = CAM_Z - Math.cos(th) * r;
       if (z < CAM_Z + 4 && Math.abs(x - pathX(z)) < 1.45 + rng() * 0.5) continue;
+      if (Math.abs(z - LANE.x) < LANE.y * 0.85) continue;
       return [x, z, r];
     }
   };
@@ -175,6 +181,7 @@ export function createGrass(env, { count, flowers }) {
     side: THREE.DoubleSide,
     uniforms: {
       ...env.u,
+      uLane: { value: LANE },
       uBase: { value: new THREE.Color('#2c3812') },
       uTipA: { value: new THREE.Color('#9db23c') },
       uTipB: { value: new THREE.Color('#e6bb4c') },
@@ -195,6 +202,7 @@ export function createGrass(env, { count, flowers }) {
   const flowerMat = new THREE.ShaderMaterial({
     uniforms: {
       ...env.u,
+      uLane: { value: LANE },
       uPalette: {
         value: [new THREE.Color('#f6f1e2'), new THREE.Color('#f3c64c'), new THREE.Color('#ec7fb2'), new THREE.Color('#8f74e0')],
       },

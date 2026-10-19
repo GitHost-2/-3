@@ -1,65 +1,85 @@
 # Atardecer en el campo
 
-Escena 3D en el navegador: un campo de trigo y flores al atardecer que se va convirtiendo en noche,
-con estrellas, nubes, luciérnagas y una luna cuadrada de píxeles al estilo Minecraft. Mientras
-carga, una pareja de pajaritos cruza el cielo.
+Una historia en movimiento que se desplaza sola, sin que haya que tocar nada. Dura unos 2 minutos y medio.
+
+| Tiempo | Qué pasa |
+| --- | --- |
+| 0:01 | Pantalla negra con letras elegantes: «Jamás pensamos que nuestros caminos se unirían». |
+| 0:11 | «Pero sin duda» y «repetiría esta historia una y mil veces :)». |
+| 0:26 | El negro se disuelve y aparece la noche: estrellas, luciérnagas, un molino y la luna cuadrada de píxeles estilo Minecraft. |
+| 0:32 | Detrás de la luna sale «Feliz cumpleaños mi amor», con el mismo color de la luna. |
+| 0:47 | La cámara baja hacia el campo. |
+| 0:50 | Cuatro gatitos con gorro de cumpleaños pasan en fila. En la panza llevan X, i, m, e. |
+| 1:10 | La página baja sola hacia un tornado de cartas rosas sobre fondo lila. Cuatro fotos salen al frente una a una. |
+| 1:53 | La página baja al final: «El amor que te tengo no se puede describir con palabras, pero sin duda quiero que seas tú con quien comparta mi presente y mi futuro» y un corazón. |
+
+Al terminar aparece un botón discreto para volver a verla.
 
 ## Verlo
 
-Abre `index.html` con doble clic (no necesita servidor) o, si prefieres un solo archivo para
-enviarlo, `atardecer-en-el-campo.html`. Hace falta un navegador con WebGL (Chrome, Edge, Firefox, Safari).
+Abre `index.html` con doble clic (no necesita servidor) o `atardecer-en-el-campo.html`, que es lo mismo en un solo
+archivo. Hace falta un navegador con WebGL (Chrome, Edge, Firefox, Safari).
 
-## Controles
+## Poner las 4 fotos
 
-| Acción | Cómo |
-| --- | --- |
-| Mirar alrededor | Arrastrar con el ratón o el dedo |
-| Acercar / alejar | Rueda del ratón o pellizco |
-| Volver a la cámara automática | Doble clic |
-| Cambiar la hora | Control del panel inferior, o flechas ←/→ |
-| Pausar / reanudar | Botón del panel o barra espaciadora |
-| Reiniciar el atardecer | Tecla `R` (o el botón al llegar a la noche) |
-| Ocultar el panel | Tecla `H` (se oculta solo a los pocos segundos) |
+Copia 4 fotos en `assets/photos/` (ver [`assets/photos/README.md`](assets/photos/README.md)) y ejecuta:
 
-El ciclo completo dura 90 segundos, de las 19:30 a las 23:00 en el reloj de la escena.
+```
+npm install
+npm run build
+```
+
+Mientras no haya fotos, las cartas muestran «Tu foto aquí».
+
+## Cambiar textos y tiempos
+
+- Las frases de inicio y el mensaje final están en `src/template.html`.
+- Todos los tiempos (cuándo sale cada cosa, cuánto dura) están juntos en el objeto `TL` de `src/main.js`.
+- El texto de la luna está en `src/sky.js` (`makeTextTexture`) y las letras de los gatitos en `src/cats.js` (`LETTERS`).
 
 ## Cómo está hecho
 
-Todo se genera en código con [three.js](https://threejs.org) (MIT); no hay modelos ni texturas externos.
+Todo se genera en código con [three.js](https://threejs.org) (MIT). No hay modelos 3D ni texturas externas.
 
-- `src/env.js` define la hora del día: colores del cielo, posición del sol y de la luna, luces y niebla.
-- `src/sky.js` dibuja el cielo (degradado, sol, nubes iluminadas por el atardecer), las estrellas
-  cuadradas y la luna de 16×16 píxeles.
-- `src/terrain.js` y `src/grass.js` crean las colinas, el camino y la hierba con viento (100 000
-  briznas instanciadas) y las flores.
-- `src/props.js` coloca árboles, el molino de viento y los fardos.
-- `src/life.js` anima las bandadas de pájaros de bloques y las luciérnagas.
-- `src/template.html` contiene la pantalla de carga, la interfaz y los estilos.
+- `src/env.js`: luz, colores del cielo y posición de la luna.
+- `src/sky.js`: cielo, nubes, estrellas cuadradas, luna de 16×16 píxeles y el texto que sale tras ella.
+- `src/terrain.js`, `src/grass.js`, `src/props.js`, `src/fireflies.js`: campo, hierba con viento, flores, árboles, molino y luciérnagas.
+- `src/cats.js`: gatitos de bloques con gorro escalonado, caminata y letras.
+- `src/tornado.js`, `src/hearts.js`, `src/finale.js`: tornado de cartas, corazones y escena final.
+- `src/main.js`: el guion. Todo es función del tiempo, así que se puede saltar a cualquier momento con `?at=60` (segundos) y `&still` para pausar. Sirve para probar.
+- `build.mjs`: empaqueta, incrusta las tipografías y las fotos, y genera `index.html`, `dist/app.js` y `atardecer-en-el-campo.html`.
 
-Para modificar algo: `npm install` y luego `npm run build`, que regenera `dist/app.js`, `index.html`
-y `atardecer-en-el-campo.html`.
+## Dónde descargar animaciones y recursos
 
-Parámetros opcionales en la URL: `?t=0.5` empieza a mitad del ciclo (0 a 1), `?still` empieza en
-pausa y `?fast` se salta la espera mínima de la pantalla de carga.
+Ordenado por tipo. Comprueba siempre la licencia de cada archivo antes de usarlo. Desde el entorno donde se
+construyó esto solo se podía descargar de npm y GitHub, por eso las tipografías vienen de npm y lo demás se dibujó en código.
 
-## Pantalla de carga con Lottie
+**Animaciones Lottie (JSON) y animaciones 2D**
+- [LottieFiles: corazones](https://lottiefiles.com/free-animations/hearts), [amor](https://lottiefiles.com/free-animations/love) y [cumpleaños](https://lottiefiles.com/free-animations/birthday).
+- [IconScout: corazones y amor](https://iconscout.com/lottie-animations/love-heart), con licencia propia por cada animación.
+- Otras opciones: Lordicon (iconos animados), Creattie, Rive, Lottielab y SVGator para crear o editar; [Glaxnimate](https://glaxnimate.org) es gratuito y de código abierto.
 
-Consulta [`assets/README.md`](assets/README.md): ahí se explica cómo usar la animación de
-LottieFiles de la pareja de pájaros. Hasta entonces se muestra una pareja de pajaritos en SVG propia.
+**Modelos 3D animados (gatos y personajes)**
+- [Quaternius: LowPoly Animated Animals](https://quaternius.itch.io/lowpoly-animated-animals), seis animales con caminar y correr, CC0.
+- [Kenney](https://kenney.nl) y [Poly Pizza](https://poly.pizza), modelos low-poly en glTF/GLB. Kenney es CC0; en Poly Pizza la mayoría pide atribución.
+- Sketchfab: [Cat Rigged & Animated Low Poly](https://sketchfab.com/3d-models/cat-rigged-animated-low-poly-7510ec711d204b5788262c6d5eb678ed) y [Low Poly Cat Walk](https://sketchfab.com/3d-models/low-poly-cat-walk-13674c3dbb074f73b6563a75c28b0fe0). Mira la licencia de cada uno.
+- [Mixamo](https://www.mixamo.com): animaciones para personajes con rig, gratis con cuenta de Adobe.
+- Gato de Minecraft con rig: solo lo encontré de pago ([TurboSquid](https://www.turbosquid.com/3d-models/3d-model-minecraft-cat-all-skins-and-ocelot-collection-rigged-3d-model-game-ready-4k-pbr-2617853)). Por eso los gatitos de esta página están hechos con cubos en código.
 
-## Dónde descargar más recursos
+**Sprites en pixel art**
+- [Cat sprites (OpenGameArt)](https://opengameart.org/content/cat-sprites), CC0, con ciclos de caminar y correr.
+- [Pixel Art Hearts](https://thiagozen.itch.io/pixel-art-hearts) (CC BY 4.0) y [16x16 Animated Hearts](https://dmitriy-shmilo.itch.io/16x16-animated-hearts).
 
-Sitios de recursos gratuitos con modelos 3D, texturas y animaciones. Comprueba la licencia de cada archivo antes de usarlo.
+**Librerías y ejemplos de animación web**
+- [10 mejores librerías de animación gratuitas](https://webdesignerdepot.com/10-best-free-animation-libraries-for-the-web): GSAP, anime.js, animate.css, Animista.
+- [Codrops: experiencias de scroll 3D cinematográficas con GSAP](https://tympanus.net/codrops/2025/11/19/how-to-build-cinematic-3d-scroll-experiences-with-gsap/) y su [código en GitHub](https://github.com/JosephASG/codrops-cinematic-scroll-animations) (MIT).
+- Galerías en espiral con three.js: [hilo del foro](https://discourse.threejs.org/t/create-3d-spiral-carousel/72873) y [ejemplo en CodePen](https://codepen.io/xrclub/pen/eYVdLZL).
 
-- [Kenney](https://kenney.nl): packs CC0 (sin atribución), con formatos GLB/glTF.
-- [Quaternius](https://quaternius.com): modelos low-poly CC0 en glTF/GLB y FBX.
-- [Poly Pizza](https://poly.pizza): modelos glTF low-poly; la mayoría exigen atribución (CC-BY), algunos son CC0.
-- [OpenGameArt](https://opengameart.org): modelos, sprites y sonidos con licencias variadas.
-- [Poly Haven](https://polyhaven.com): modelos, HDRI y texturas CC0 más realistas.
-- [LottieFiles](https://lottiefiles.com/es/free-animation/bird-pair-love-and-flying-sky-4LHUsFSYhQ): animaciones Lottie.
+**Tipografías**
+- [Fontsource](https://fontsource.org): tipografías de Google Fonts como paquetes de npm, para alojarlas uno mismo.
 
 ## Créditos y licencias
 
 - three.js: licencia MIT.
-- La luna de píxeles es de dibujo propio, inspirada en Minecraft. Este proyecto no está afiliado a Mojang ni a Microsoft y no usa ninguno de sus archivos.
-- Los pájaros 3D, el paisaje y el resto de elementos son originales de este proyecto.
+- Tipografías incrustadas, licencia SIL Open Font License 1.1: Cormorant Garamond y Pixelify Sans (vía Fontsource).
+- La luna de píxeles y los gatitos son de dibujo propio, inspirados en Minecraft. Este proyecto no está afiliado a Mojang ni a Microsoft y no usa ninguno de sus archivos.

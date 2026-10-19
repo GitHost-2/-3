@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { smooth, clamp } from './noise.js';
 
+export const NIGHT_T = 0.69;   // la noche que se ve al empezar la historia
 export const SUN_AZ = 0.35;      // azimut del sol (rad, + = derecha de la vista inicial)
 const D2R = Math.PI / 180;
 

@@ -192,6 +192,35 @@ function makeMoonTexture() {
   return tex;
 }
 
+const MOON_LIGHT = '#f0f2fa';   // mismo color claro que la luna
+
+// Texto con el color de la luna y un halo azul, dibujado en un canvas.
+function makeTextTexture(lines) {
+  const family = '"Cormorant Garamond", Georgia, "Times New Roman", serif';
+  const px = 190, pad = 100, lh = px * 1.22;
+  const c = document.createElement('canvas');
+  let g = c.getContext('2d');
+  g.font = `italic 400 ${px}px ${family}`;
+  const widest = Math.max(...lines.map((l) => g.measureText(l).width));
+  c.width = Math.ceil(widest + pad * 2);
+  c.height = Math.ceil(lh * lines.length + pad * 2);
+  g = c.getContext('2d');
+  g.font = `italic 400 ${px}px ${family}`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  lines.forEach((l, i) => {
+    const y = pad + lh * (i + 0.5);
+    g.shadowColor = 'rgba(140, 175, 255, 0.95)'; g.shadowBlur = 70; g.fillStyle = MOON_LIGHT;
+    g.fillText(l, c.width / 2, y);
+    g.shadowColor = 'rgba(190, 210, 255, 0.9)'; g.shadowBlur = 16;
+    g.fillText(l, c.width / 2, y);
+  });
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return { tex, aspect: c.width / c.height };
+}
+
 export function createSky(env, pixelRatio) {
   const group = new THREE.Group();   // sigue a la cámara: el cielo no tiene paralaje
   group.frustumCulled = false;
@@ -228,6 +257,25 @@ export function createSky(env, pixelRatio) {
   stars.frustumCulled = false;
   group.add(stars);
 
+  // «Feliz cumpleaños mi amor»: queda detrás de la luna y sale por debajo de ella.
+  const textMat = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, fog: false, toneMapped: false, opacity: 0 });
+  const textMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), textMat);
+  textMesh.renderOrder = -8.6;
+  textMesh.frustumCulled = false;
+  textMesh.visible = false;
+  group.add(textMesh);
+  const moonText = { reveal: 0, alpha: 0 };
+  let textAspect = 8, textPortrait = null;
+  function setTextLayout(portrait) {
+    if (portrait === textPortrait) return;
+    textPortrait = portrait;
+    const { tex, aspect } = makeTextTexture(portrait ? ['Feliz cumpleaños', 'mi amor'] : ['Feliz cumpleaños mi amor']);
+    if (textMat.map) textMat.map.dispose();
+    textMat.map = tex; textMat.needsUpdate = true;
+    textAspect = aspect;
+  }
+  const _down = new THREE.Vector3(), _dir = new THREE.Vector3();
+
   const moonMat = new THREE.MeshBasicMaterial({
     map: makeMoonTexture(), transparent: true, depthWrite: false, fog: false, toneMapped: false,
   });
@@ -242,6 +290,7 @@ export function createSky(env, pixelRatio) {
   return {
     group,
     setPixelRatio(pr) { starMat.uniforms.uPx.value = pr; },
+    moonText,
     update(camera) {
       group.position.copy(camera.position);
       const U = skyMat.uniforms;
@@ -250,11 +299,31 @@ export function createSky(env, pixelRatio) {
       U.uMoonAmt.value = env.moonAmt;
       U.uCloudAmt.value = 0.95 - 0.5 * env.night;
       // El cielo gira despacio sobre un eje inclinado, como en el juego.
-      stars.quaternion.setFromAxisAngle(axis, env.t * 0.45);
+      stars.quaternion.setFromAxisAngle(axis, env.t * 0.45 + env.time * 0.004);
       moon.position.copy(env.moonDir).multiplyScalar(MOON_R);
       moon.lookAt(camera.position);
       moonMat.opacity = env.moonAmt;
       moon.visible = env.moonAmt > 0.002;
+
+      // Texto: ancho angular según el campo de visión; en vertical va en dos líneas.
+      const aspect = camera.aspect;
+      setTextLayout(aspect < 0.85);
+      const hfov = 2 * Math.atan(Math.tan((camera.fov * Math.PI) / 360) * aspect);
+      const angW = Math.min(aspect < 0.85 ? 0.8 * hfov : 0.62 * hfov, 1.0);
+      const R2 = MOON_R * 1.03;
+      const worldW = 2 * R2 * Math.tan(angW / 2);
+      const worldH = worldW / textAspect;
+      const e = 1 - Math.pow(1 - Math.min(1, Math.max(0, moonText.reveal)), 3);
+      textMesh.visible = moonText.alpha > 0.003 && moonText.reveal > 0.001;
+      if (textMesh.visible) {
+        _dir.copy(env.moonDir);
+        _down.set(0, -1, 0).addScaledVector(_dir, _dir.y).normalize();
+        const gap = moonSize * 0.5 + worldH * 0.5 + moonSize * 0.14;
+        textMesh.position.copy(_dir).multiplyScalar(R2).addScaledVector(_down, gap * e);
+        textMesh.scale.set(worldW * (0.12 + 0.88 * e), worldH * (0.3 + 0.7 * e), 1);
+        textMesh.lookAt(camera.position);
+        textMat.opacity = Math.min(1, e * 2.2) * moonText.alpha * env.moonAmt;
+      }
     },
   };
 }
