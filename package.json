@@ -1,0 +1,17 @@
+{
+  "name": "atardecer-en-el-campo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Atardecer 3D en un campo que se convierte en noche con estrellas y luna estilo Minecraft.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "lottie-web": "^5.12.2",
+    "three": "0.160.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0"
+  }
+}
